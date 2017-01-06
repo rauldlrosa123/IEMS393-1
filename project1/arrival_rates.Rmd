@@ -1,0 +1,32 @@
+---
+title: "arrival_rates"
+author: "Eric"
+date: "January 5, 2017"
+output: html_document
+---
+```{r}
+require(ggplot2)
+require(dplyr)
+require(magrittr)
+require(tidyr)
+
+d <- read.csv("callcenter_data_updated.csv")
+# reshape countries to long form, format dates
+d <- d %>% 
+      gather(Country, callers, count_US:count_China) %>% 
+      rename(DATE = DATE..MM.DD.YYYY) %>% 
+      mutate(DATE = as.Date(as.character(DATE), format = "%m/%d/%Y"))
+  
+# Synchronize time offset
+
+```
+
+### By hour
+```{r}
+group_by(d, Country, HOUR, callers) %>% 
+  summarise(callers_per_hour = mean(callers))
+
+ggplot(data = ) + 
+  geom_point(aes(x = HOUR, y = callers), alpha = .2)
+```
+
