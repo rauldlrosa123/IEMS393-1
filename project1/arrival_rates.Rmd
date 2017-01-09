@@ -2,31 +2,81 @@
 title: "arrival_rates"
 author: "Eric"
 date: "January 5, 2017"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
-```{r}
+```{r, message=F, warning=F}
 require(ggplot2)
 require(dplyr)
 require(magrittr)
 require(tidyr)
-
+require(lubridate)
 d <- read.csv("callcenter_data_updated.csv")
+
 # reshape countries to long form, format dates
 d <- d %>% 
       gather(Country, callers, count_US:count_China) %>% 
-      rename(DATE = DATE..MM.DD.YYYY) %>% 
-      mutate(DATE = as.Date(as.character(DATE), format = "%m/%d/%Y"))
-  
-# Synchronize time offset
+      rename(date = DATE..MM.DD.YYYY, hour = HOUR, day = DAY, country = Country) %>% 
+      mutate(date = as.Date(as.character(date), format = "%m/%d/%Y")) %>% 
+      mutate(month = lubridate::month(date),
+             day = lubridate::day(date),
+             year = lubridate::year(date))
 
+str(d)
 ```
 
-### By hour
+### By Country
+
 ```{r}
-group_by(d, Country, HOUR, callers) %>% 
-  summarise(callers_per_hour = mean(callers))
-
-ggplot(data = ) + 
-  geom_point(aes(x = HOUR, y = callers), alpha = .2)
+ggplot(d) + geom_histogram(aes(x=callers)) + facet_grid(country ~ .) +
+  ggtitle("Caller volume by country") + xlab("count of callers")
 ```
+
+### Yearly cycle
+
+Helper function for investigating caller cycles.
+http://stackoverflow.com/questions/27975124/pass-arguments-to-dplyr-functionsr
+
+```{r}
+plot_caller_cycles <- function(cycle, granularity, country=TRUE, data=d){
+  # takes groupby_vars as char vector of groupby terms
+
+  groupby_vars <- c(cycle, granularity)
+  if (country == T){
+    groupby_vars <- c(groupby_vars, "country")
+  }
+  groupby_vars <- lapply(groupby_vars, as.symbol)
+  
+  temp <- data %>% 
+          group_by_(.dots = groupby_vars) %>% # group_by_ to use standard eval
+          summarise(callers = mean(callers))  # .dots to pass char vector as params
+}
+
+t <- plot_caller_cycles(cycle = "year", granularity = "day")
+
+```
+
+
+### Yearly cycle
+```{r}
+
+```
+
+### Monthly cycle
+```{r}
+
+```
+
+### Weekly cycle
+```{r}
+
+```
+
+### Daily cycle
+```{r}
+
+```
+
+
 
